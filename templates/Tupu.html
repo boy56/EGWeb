@@ -1,0 +1,766 @@
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>Event Knowledge Graph V0.1</title>
+    <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/flat-ui.min.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/loading0.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/iconfont.css">
+
+    <style>
+        html,body{
+            margin:0;
+            height:100%;
+            font-size: 16px;
+        }
+        body{
+            text-align: center;
+            font-family: PingFang SC, Lantinghei SC, Microsoft Yahei, Hiragino Sans GB, Microsoft Sans Serif, WenQuanYi Micro Hei, sans;
+            background-color: #bbbbbb;
+            color:#060A0E;
+        }
+        .card{
+            margin: 2em auto;;
+            background-color: white;
+            border-radius: 0.5em;
+        }
+        .echartsTooltipP{
+            font-size:16px;
+        }
+    </style>
+</head>
+<body>
+    <script type="text/javascript" src="/static/js/echarts.js"></script>
+    <script src="/static/js/jquery-3.1.1.min.js"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+    <script src="/static/js/flat-ui.min.js"></script>
+    <script src="/static/js/application.js"></script>
+    
+    <style>
+        .my_nav{
+            border-radius: 0;
+            margin: 0;
+	    position: relative;
+	    z-index: 100000;
+        }
+    </style>
+
+    <nav class="my_nav navbar navbar-inverse navbar-lg " role="navigation">
+        <div class="navbar-header">
+            <div class="navbar-brand title" style="font-size: 1.2em">Event KG</div>
+        </div>
+        <ul class="nav navbar-nav">
+            <li><a href="/Tupu/">图谱</a></li>
+            <li><a href="/schema/">体系</a></li>
+            <li><a href="/display/">统计</a></li>
+            <li><a href="/Chouqu/">抽取</a></li>
+            <li><a href="/demo/">DEMO</a></li>
+            <li><a href="/recommend/">推荐</a></li>
+        </ul>
+        <div class="navbar-form navbar-left">
+            <div class="form-group" >
+                <div class="input-group" style="width: 300px">
+                    <input class="form-control" id="main_input" type="text" placeholder="输入待查询的问题" onkeydown="if(event.keyCode===13) jump()">
+                    <span class="input-group-btn" style="text-align: left">
+                        <button type="button" class="btn" onclick="jump()"><span class="iconfont icon-sousuo" aria-hidden="true"></span></button>
+                    </span>
+                </div>
+            </div>
+            <button class="btn btn-default btn-sm" type="button" onclick="$('#sampleQuestionModal').modal();">示例</button>
+        </div>
+    </nav>
+    <!--示例问题模态框-->
+    <div class="modal fade" id="sampleQuestionModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only"></span></button>
+                    <!--<h3 class="modal-title" id="entitySelectModalTitle" >示例问题</h4>-->
+                </div>
+                <div class="modal-body">
+                    <p><a href="#" class="sampleQuestionItem">T_发现</a></p>
+                    <p><a href="#" class="sampleQuestionItem">T_发现-尸体</a></p>
+                    <p><a href="#" class="sampleQuestionItem">E_李文星</a></p>
+                    <p><a href="#" class="sampleQuestionItem">E_魏则西</a></p>
+                    <p><a href="#" class="sampleQuestionItem">ET_李文星</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        $(".navbar-nav li [href='"+window.location.pathname+"']").parent().addClass("active");
+
+        var main_input = $("#main_input");
+
+        $(".sampleQuestionItem").each(function(){
+            $(this).click(function(){
+                $("#sampleQuestionModal").modal("hide");
+                main_input.val($(this).text());
+                jump();
+            });
+        });
+
+        function jump(){
+            var question = $.trim(main_input.val());
+            if (question !== ""){
+                if (window.location.pathname==="/"){
+                    getData(question);
+                }
+                else{
+                    window.location.href = "/?q="+question;
+                }
+            }
+            main_input.val("");
+        }
+
+    </script>
+
+    <link rel="stylesheet" type="text/css" href="/static/css/loading0.css">
+    <style>
+        #container{
+            width:100%;
+        }
+        th{
+            text-align: center;
+        }
+    </style>
+
+        <!--加载动画-->
+    <div class="spinner">
+        <div class="double-bounce1"></div>
+        <div class="double-bounce2"></div>
+    </div>
+
+    <script>
+        var loading_gif = $(".spinner");
+        var window_width = $(document.body).width();
+        var window_height = $(document.body).height();
+        var width = window_width*0.05;
+        loading_gif.width(width);
+        loading_gif.height(width);
+        loading_gif.css('margin-left',(window_width-width)/2);
+        loading_gif.css('margin-top',(window_height-width)/2);
+    </script>
+
+
+
+    <!--图谱界面-->
+    <div id="container"></div>
+
+    <!--实体信息模态框-->
+    <div class="modal fade" id="entityInfoModal" tabindex="-1" role="dialog" aria-labelledby="entityInfoModalTitle" aria-hidden="true" >
+        <div class="modal-dialog" style="width: 70%">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only"></span></button>
+                    <h4 class="modal-title" id="entityInfoModalTitle">详细信息</h4>
+                </div>
+                <div class="modal-body">
+                    <img id="entityInfoModalImage" style="padding:1em; width: 150px" src="/static/img/logo.jpg"/>
+                    <table class="table">
+                        <tbody id="entityInfoModalTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--同名实体选择模态框-->
+    <div class="modal fade" id="entitySelectModal" tabindex="-1" role="dialog" aria-labelledby="entitySelectModalTitle" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only"></span></button>
+                    <h4 class="modal-title" id="entitySelectModalTitle">详细信息</h4>
+                </div>
+                <div class="modal-body">
+                    <table class="table">
+                        <tbody id="entitySelectModalTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+    var window_width = window.innerWidth;
+    var window_height = window.innerHeight;
+    var my_nav = $(".my_nav");
+    var nav_offset = my_nav.innerHeight();
+    var myChart = null;
+
+    $("#container").height(window_height-nav_offset);
+    
+    $.ajaxSetup({
+        error: function (e) {
+            console.log(e);
+            alert("找不到相关信息");
+            return false;
+        }
+    });
+
+    var q = getUrlParam('q');
+    if (q) getData(q); else getData("E_李文星");
+
+    //获取url中的参数
+    function getUrlParam(name) {
+        var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"); //构造一个含有目标参数的正则表达式对象
+        var r = window.location.search.substr(1).match(reg);  //匹配目标参数
+        if (r !== null) return decodeURI(r[2]); else return null; //返回参数值
+    }
+
+    //获取新数据
+    function getData(question){
+        //$('.spinner').show();
+        var input_info = question.split('_')
+        /*
+            对输入格式进行检查
+        */
+        //console.log("????")
+        if(input_info.length < 2){
+            alert("输入格式有误, 识别不到 '_'");
+            return;
+        }
+        var type = input_info[0];
+        var content = input_info[1];
+        var get_data = {
+                "type": type,
+                "content": content,
+        };
+        
+        //the request can not successfully retrieve data from a different domain, subdomain, port, or protocol.
+        /*
+        $.ajax({
+            url: "{% url 'search_url' %}",
+            type: "GET",
+            data: get_data,
+            success: function (data) {
+                console.log(data)
+            }
+        });
+        */
+        $.getJSON("{% url 'search_url' %}", get_data, function(result){     //$.ajax的get请求的一个上层封装
+            console.log(result);
+            /*
+            if(result.status == 0){
+                alert("查询格式有误");
+                return;
+            }
+            */
+            refresh_graph(question, result);
+            
+        });
+        
+        
+        /*
+        //获取数据
+        var url;
+        if (id === undefined) {
+            url = "/api/graph/graph/?q=" + question;
+        }else{
+            url = "/api/graph/graph/?q=" + question + "&id=" + id;
+        }
+
+        $.getJSON(url, function(result){
+            console.log(result);
+            $('.spinner').hide();
+            if (result.nodes){
+                //如果得到的数据是图谱
+                refresh_graph(question, result);
+            }else if (result.entities) {
+                //如果得到的数据是同名实体列表
+                $('#entitySelectModalTitle').text(question);
+                var table = $('#entitySelectModalTable');
+                $("#entitySelectModalTable tr").remove();
+                result.entities.forEach(function(entity){
+                    var item = $("<a></a>").text(entity['name']+entity['subname']+'<'+entity['label']+'>');
+                    item.css("cursor", "pointer");
+                    item.on('click', function(){
+                        $('#entitySelectModal').modal('hide');
+                        getData(question, entity['neoId']);
+                    });
+                    table.append($("<tr></tr>").append($("<td></td>").append(item)));
+                });
+                $('#entitySelectModal').modal();
+            }
+        });
+        */
+    }
+
+
+    //刷新mychart绘图页面
+    function refresh_graph(question, result){
+        //对mychart的初始化
+        if (myChart)
+            myChart.clear();
+        else {
+            myChart = echarts.init(document.getElementById('container'));
+            /*
+            //绑定整个图的点击事件
+            myChart.on('click', function (event) {  //监听节点的点击事件
+                if (event.dataType === 'node') {
+                    var neoId = event.data.neoId;
+                    var name = event.name;
+                    var title = $("#entityInfoModalTitle");
+                    var table = $("#entityInfoModalTable");
+                    title.text("正在查询...");
+                    if (neoId === null) return;
+                    var url = "/api/graph/entity?id=" + neoId;  //根据neo4j中的数据ID来进行索引查询node信息
+                    $.getJSON(url, function (result) {
+                        console.log(result);
+                        title.text(name);
+                        table.empty();
+                        for (var key in result) {
+                            table.append("<tr><td style='font-weight: bold'>" + key + "</td><td>" + result[key] + "</td></tr>");
+                        }
+                        $('#entityInfoModal').modal();
+                    });
+                }
+            });
+            myChart.on('dblclick', function (event) {
+                if (event.dataType === 'node') {
+                    var neoId = event.data.neoId;
+                    var name = event.name;
+                    getData(name, neoId);
+                }
+            });
+            */
+        }
+        
+        //刷新绘图页面
+        var categories = [];
+		var nodeMap = {};		//触发词名字与node对象字典
+		var nodeList = [];
+		var edgeMaxW = 0;	//边的权重最大值
+		var edgeMinW = 0;	//边的权重最小值
+
+        var fontSize = 14;
+			
+		//设置类别
+		categories[0] = {
+	        name:'Trigger-Start', 
+		    itemStyle: {
+			    color:'#36871d'
+		    }
+		};
+			
+		categories[1] = {
+			name:'Trigger-Middle',
+			itemStyle: {
+				color:'#105498'
+			}
+		};
+			
+		categories[2] = {
+			name:'Trigger-End',
+			itemStyle: {
+				//color:'#bda29a'
+				color:'#c1291f'
+			}
+		};
+			
+		//分拣出触发词与事件信息
+		result.nodes.forEach(function (node) {
+            node.isSource = false;
+            node.isTarget = false;
+			nodeList.push(node);
+			nodeMap[node.ID] = node;
+			/*
+            if(node.TYPE == "EVENT"){	
+                node.isSource = false;
+                node.isTarget = false;
+				nodeList.push(node);
+				nodeMap[node.ID] = node;
+			}else{
+                node.isSource = false;
+                node.isTarget = false;
+				nodeList.push(node);
+				nodeMap[node.ID] = node;
+			}
+            */
+		});
+
+		//寻找边的权重最大值与最小值, 并设置节点的类型(source、middle、target)
+		result.edges.forEach(function (edge){
+			nodeMap[edge.sourceID].isSource = true;		
+            nodeMap[edge.targetID].isTarget = true;
+		
+			if(edgeMaxW == 0 && edgeMinW == 0){
+				edgeMaxW = edge.weight;
+				edgeMinW = edge.weight;
+			}else if(edge.weight > edgeMaxW){
+				edgeMaxW = edge.weight;
+			}else if(edge.weight < edgeMinW){
+				edgeMinW = edge.weight;
+			}
+            
+            //设置echarts中使用到的edge属性
+            edge.label = {
+                formatter: "weight: " + edge.weight
+            };
+
+            /*
+                Echarts的links的source target可以为边的源节点名称的字符串，也支持使用数字表示源节点的索引，所以创建links链接数据节点时source target使用字符串就是使用data节点的id属性指定的值，使用int就是使用data数据的在数组中的索引位置，而不是id值。
+            */
+            edge.source = "" + edge.sourceID;
+            edge.target = "" + edge.targetID;
+            edge.lineStyle = {
+                normal: {}
+            };
+		});
+			
+		//对触发词节点相关属性进行设置
+		nodeList.forEach(function (node) {
+			//区分起始节点、中间节点和结束节点
+			if(node.isSource && node.isTarget){
+				node.category = 1;	//中间节点
+			}else if(node.isSource){
+				node.category = 0;  //起始节点
+			}else if(node.isTarget){
+				node.category = 2;  //结束节点
+			}else{
+				//当前应该不存在孤立点
+				console.log("Warning: " + node.name + " is neither a source nor a target");
+			}
+			
+            node.id = "" + node.ID
+            if(node.TYPE == "EVENT"){
+                node.name = node.title
+            }else{
+                node.name = node.name
+            }
+           
+			//node.itemStyle = null;	
+			node.symbolSize = 40;	//触发词大小
+			//node.category = 0;
+			node.label = {
+				show: true
+			};
+		});
+			
+		//根据边的权重设置颜色
+		result.edges.forEach(function (edge){
+			var lineWidth;
+            var colorWeight;
+			if(edgeMaxW - edgeMinW == 0){
+                colorWeight = 150;
+            }else{
+                colorWeight = 255 - (edge.weight - edgeMinW)/(edgeMaxW - edgeMinW) * 255;	 //映射到(0,255)
+            }
+            
+			//var colorWeight = (edge.weight - edgeMinW)/(edgeMaxW - edgeMinW) * 0.5 + 0.5;	 //映射到(0.5,1)
+			var lineColor = 'rgb(0,' + colorWeight + ',255)';
+			//var lineColor = 'rgba(0, 191, 255, ' + colorWeight + ')';
+			
+			edge.lineStyle = {
+				width: 1,
+				//width: lineWidth,
+				color: lineColor,
+				//type: 'dashed'
+				type: 'solid'
+			}
+		});
+			
+		//ECharts配置项信息
+		option = {
+            title: {
+                text: result.answer,
+                top: '1%',
+                left: '1%',
+                textStyle:{
+                    color:"#333333",
+                    fontSize: fontSize*1.8,
+                    fontWeight:'bolder'
+                },
+                subtext: '图中共有 '+result.nodes.length+' 个节点以及 '+result.edges.length+' 条关系',
+                subtextStyle:{
+                    color:"#333333",
+                    fontSize: fontSize,
+                    fontWeight:'bold'
+                }
+            },
+			tooltip:{
+				//triggerOn: 'click',
+				confine: true,	//是否将tooltip框限制在图表的区域内。
+				enterable: true, //鼠标是否可以进入悬浮层
+				formatter: function(params, ticket, callback){
+					//console.log(params);
+					if(params.dataType == 'node'){	//触发词对应的事件描述信息
+						var nodeInfo = params.data;
+                        var showHtm = '';
+                        if(nodeInfo.TYPE == 'EVENT'){
+                            showHtm += '<p class="echartsTooltipP" align="left">Event: ' + nodeInfo.title + '</p>';
+						    showHtm += '<p class="echartsTooltipP" align="left">Date: ' + nodeInfo.time + '</p>';
+						    showHtm += '<p class="echartsTooltipP" align="left">Person: ' + nodeInfo.persons + '</p>';
+						    showHtm += '<p class="echartsTooltipP" align="left">Location: ' + nodeInfo.locations + '</p>';
+						    showHtm += '<p class="echartsTooltipP" align="left">Organization: ' + nodeInfo.organizations + '</p>';
+						    showHtm += '<p class="echartsTooltipP" align="left">Keywords: ' + nodeInfo.keywords + '</p>';
+						    showHtm += '<p class="echartsTooltipP" align="left">Trigger: ' + nodeInfo.triggers + '</p>';
+                        }else {
+                            showHtm += '<p class="echartsTooltipP" align="left"> Name: ' + nodeInfo.name + '</p>';
+                            showHtm += '<p class="echartsTooltipP" align="left"> Verb: ' + nodeInfo.verb + '</p>';
+                            showHtm += '<p class="echartsTooltipP" align="left"> Noun: ' + nodeInfo.noun + '</p>';
+                            showHtm += '<br>';
+                            nodeInfo.events.forEach(function(e){
+                                showHtm += '<p class="echartsTooltipP" align="left">Event: ' + e.title + '</p>';
+                                showHtm += '<p class="echartsTooltipP" align="left">Theme: ' + e.theme + '</p>';
+                                showHtm += '<br>';
+                            });
+
+                            
+                        }
+						return showHtm;
+					}else if(params.dataType == 'edge'){	//连接边对应的事件描述信息
+						var showHtm = '';
+						showHtm += params.data.source + ' -> ' + params.data.target + '<br>';
+						showHtm += 'Weight: ' + params.data.weight + '<br>';
+						return showHtm;
+					}
+				}
+			},
+			toolbox: {
+				feature: {
+					saveAsImage: {}
+				}
+			},
+			legend: [{
+				// selectedMode: 'single',
+				show: true,
+				orient: 'vertical',
+				right: 10,
+				top: 20,
+				bottom: 20,
+				data: categories.map(function (a) {
+					return a.name;
+				}),
+				
+				selected:{
+					"Trigger-Source": true,
+					"Trigger-Middle": true,
+					"Trigger-End": true
+				}
+				
+			}],
+			
+			
+			//视觉映射组件
+			visualMap:{
+				//left: 'right',
+				right: '2.5%',
+				bottom: '10%',
+				itemHeight: 120,
+				text: ['Edge Weight'],
+				textGap: 30,
+				hoverLink: false,
+				seriesIndex: result.edges,
+				inRange: {
+					color: ['rgb(0,255,255)', 'rgb(0,0,255)']
+				},
+				outOfRange: {
+					color: ['rgba(255,255,255,.2)']
+				}
+				
+			},
+			
+			animationDuration: 1500,
+			animationEasingUpdate: 'quinticInOut',
+			series : [
+				{
+					name: 'Event Graph',
+					type: 'graph',
+					layout: 'force',
+					force:{
+						repulsion: 3000,		//斥力因子
+						edgeLength: [0.1,100],
+						layoutAnimation: true	//布局过程动画是否开启
+					},
+					draggable: true,	//节点是否可拖拽
+					data: result.nodes,
+					links: result.edges,
+					categories: categories,
+					roam: true,
+					focusNodeAdjacency: true,
+					edgeSymbol:['none','arrow'],
+					edgeSymbolSize: 20,
+					//left: '10%',
+					//top: '10%',
+					//right: '10%',
+					//bottom: '10%',
+					itemStyle: {
+						normal: {
+							borderColor: '#fff',
+							borderWidth: 1,
+							shadowBlur: 10,
+							shadowColor: 'rgba(0, 0, 0, 0.3)'
+						}
+					},
+					label: {
+						normal: {
+							position: 'right',
+							formatter: '{b}',
+							fontSize: 18
+						}
+					},
+					lineStyle: {
+						normal: {
+							curveness: 0.3,
+						}
+					},
+					emphasis: {
+						lineStyle:{
+							width: 10
+							//type: 'solid'
+						},
+						edgeLabel:{
+							show: true
+						},
+						label:{
+							show: true
+						}
+					}
+				}
+			]
+		};
+
+        /*
+        //刷新绘图页面
+        var nodeSize = 80;
+        var dnodeSize = 19;
+        var fontSize = 14;
+        var nodes = [];
+        var links = [];
+        var categories = [];
+        var answerpath = result.answerpath;
+        result.nodes.forEach(function(node){
+            if ($.inArray(node.label,categories) < 0){
+                categories.push({
+                    name: node.label
+                });
+            }
+            node.category=node.label;
+            node.symbol = 'circle';
+            node.symbolSize = nodeSize-node.value*dnodeSize;
+            node.x = null;
+            node.y = null;
+            node.itemStyle = null;
+            node.label = {
+                normal: {
+                    show: true,
+                    position: 'right'
+                }
+            };
+            nodes.push(node);
+        });
+        result.links.forEach(function(edge){
+            links.push(edge);
+        });
+        //点亮寻找的答案轨迹
+        nodes.forEach(function(node){
+            if ($.inArray(node.id,answerpath) >= 0)
+                node.itemStyle = {
+                    normal: {
+                        borderColor:'yellow',
+                        borderWidth:10
+                    }
+                };
+        });
+        links.forEach(function(link){
+            if (($.inArray(link.source,answerpath)>=0)&&($.inArray(link.target,answerpath)>=0))
+                link.lineStyle = {
+                    normal: {
+                        color: 'yellow',
+                        width: 10
+                    }
+                };
+        });
+        //开始绘制图像
+        var colorPalette = ['#E01F54','#2980B9','#e05038','#009966','#9fa8a3',
+            '#89bdd3','#e6af4b','#d3758f','#dcc392','#2e4783',
+            '#82b6e9','#ff6347','#a092f1','#0a915d','#7d4627',
+            '#6699FF','#ff6666','#3cb371','#d5b158','#38b6b6'
+        ];
+        var option = {
+            color:colorPalette,
+            backgroundColor:'white',
+            title: {
+                text: result.answer,
+                top: '1%',
+                left: '1%',
+                textStyle:{
+                    color:"#333333",
+                    fontSize: fontSize*1.8,
+                    fontWeight:'bolder'
+                },
+                subtext: '图中共有 '+result.nodes.length+' 个节点以及 '+result.links.length+' 条关系',
+                subtextStyle:{
+                    color:"#333333",
+                    fontSize: fontSize,
+                    fontWeight:'bold'
+                }
+            },
+            tooltip: {
+                formatter: function (params) {
+                    if (params.dataType === 'node')
+                        return params.data.category;
+                    else
+                        return params.data.name;
+                }
+            },
+            legend:[{
+                z:0,
+                data: categories,
+                bottom: '1%',
+                left: '1%',
+                orient: 'vertical',
+                itemGap: 12,
+                selectedMode:false,
+                textStyle:{
+                    color:'#333333',
+                    fontSize: fontSize*0.9,
+                    fontWeight:'bold'
+                }
+            }],
+            series:[{
+                type: 'graph',
+                layout: 'force',
+                data: nodes,
+                links: links,
+                categories: categories,
+                lineStyle: {
+                    normal: {
+                        color: 'source',
+                        width: 3,
+                        curveness: 0.2
+                    }
+                },
+                force: {
+                    repulsion: 1000,
+                    layoutAnimation: false
+                },
+                roam: true,
+                focusNodeAdjacency: true,
+                animationDuration: 2000
+            }],
+            textStyle: {
+                fontFamily: '微软雅黑',
+                fontSize: fontSize,
+                fontWeight:'bold'
+            }
+        };
+        */
+        myChart.setOption(option);
+    }
+    </script>
+
+
+
+
+</body>
+</html>

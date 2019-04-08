@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>Zhaopin Knowledge Graph V0.5</title>
+    <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/flat-ui.min.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/loading0.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/iconfont.css">
+
+    <style>
+        html,body{
+            margin:0;
+            height:100%;
+            font-size: 16px;
+        }
+        body{
+            text-align: center;
+            font-family: PingFang SC, Lantinghei SC, Microsoft Yahei, Hiragino Sans GB, Microsoft Sans Serif, WenQuanYi Micro Hei, sans;
+            background-color: #bbbbbb;
+            color:#060A0E;
+        }
+        .card{
+            margin: 2em auto;;
+            background-color: white;
+            border-radius: 0.5em;
+        }
+    </style>
+</head>
+<body>
+    <script type="text/javascript" src="http://www.echartsjs.com/gallery/vendors/echarts/echarts-all-3.js"></script>
+    <script src="/static/js/jquery-3.1.1.min.js"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+    <script src="/static/js/flat-ui.min.js"></script>
+    <script src="/static/js/application.js"></script>
+
+    
+    <style>
+        .my_nav{
+            border-radius: 0;
+            margin: 0;
+	    position: relative;
+	    z-index: 100000;
+        }
+    </style>
+
+    <nav class="my_nav navbar navbar-inverse navbar-lg " role="navigation">
+        <div class="navbar-header">
+            <div class="navbar-brand title" style="font-size: 1.2em">Event KG</div>
+        </div>
+        <ul class="nav navbar-nav">
+            <li><a href="/Tupu/">图谱</a></li>
+            <li><a href="/schema/">体系</a></li>
+            <li><a href="/display/">统计</a></li>
+            <li><a href="/Chouqu/">抽取</a></li>
+            <li><a href="/demo/">DEMO</a></li>
+            <li><a href="/recommend/">推荐</a></li>
+        </ul>
+        <div class="navbar-form navbar-left">
+            <div class="form-group" >
+                <div class="input-group" style="width: 300px">
+                    <input class="form-control" id="main_input" type="text" placeholder="输入待查询的问题" onkeydown="if(event.keyCode===13) jump()">
+                    <span class="input-group-btn" style="text-align: left">
+                        <button type="button" class="btn" onclick="jump()"><span class="iconfont icon-sousuo" aria-hidden="true"></span></button>
+                    </span>
+                </div>
+            </div>
+            <button class="btn btn-default btn-sm" type="button" onclick="$('#sampleQuestionModal').modal();">示例</button>
+        </div>
+    </nav>
+    <!--示例问题模态框-->
+    <div class="modal fade" id="sampleQuestionModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only"></span></button>
+                    <h4 class="modal-title" id="entitySelectModalTitle" >示例问题</h4>
+                </div>
+                <div class="modal-body">
+                    <p><a href="#" class="sampleQuestionItem">搜狐焦点发布了哪些招聘公告</a></p>
+                    <p><a href="#" class="sampleQuestionItem">简历:246607018所取得的最高学历是什么</a></p>
+                    <p><a href="#" class="sampleQuestionItem">招聘:天猫售前客服被曝光到哪些简历</a></p>
+                    <p><a href="#" class="sampleQuestionItem">用户:121512439浏览过哪些公告</a></p>
+                    <p><a href="#" class="sampleQuestionItem">招聘:高级Android开发工程师有哪些技能要求</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        $(".navbar-nav li [href='"+window.location.pathname+"']").parent().addClass("active");
+
+        var main_input = $("#main_input");
+
+        $(".sampleQuestionItem").each(function(){
+            $(this).click(function(){
+                $("#sampleQuestionModal").modal("hide");
+                main_input.val($(this).text());
+                jump();
+            });
+        });
+
+        function jump(){
+            var question = $.trim(main_input.val());
+            if (question !== ""){
+                if (window.location.pathname==="/"){
+                    getData(question);
+                }
+                else{
+                    window.location.href = "/?q="+question;
+                }
+            }
+            main_input.val("");
+        }
+
+    </script>
+
+    
+
+    <style>
+
+        th{
+            text-align: center;
+        }
+        a{
+            cursor: pointer;
+        }
+        p{
+            font-size: 1em;
+            font-weight: bold;
+            padding: 1em 0;
+        }
+    </style>
+
+    <!--图谱-->
+    <div class="card" id='card0' style="width: 94%;margin-left: 3%">
+        <div id="panel" style="width: 100%;height: 900px"></div>
+    </div>
+
+    <!--交互-->
+    <div class="row card" style="width: 80%">
+        <div class="col-md-4">
+            <p >选择您想要查询的内容</p>
+            <p>
+                <a onclick="question_demo(1)">阿里集团现在有哪些职位正在招人？</a><br>
+                <a onclick="question_demo(2)">投了这个职位的求职者还投了哪些其他公司？</a><br>
+                <a onclick="question_demo(3)">月薪大于30000的职位有哪些？</a>
+            </p>
+        </div>
+        <div class="col-md-4">
+            <p >选择您需要分析的问题</p>
+            <p>
+                <a onclick="question_demo(4)">对于产品经理这个职位，哪个公司条件最好？</a><br>
+                <a onclick="question_demo(5)">在北京，网络工程师的平均工资大概是多少？</a><br>
+                <a onclick="question_demo(6)">目前前端开发工程师的普遍技术要求有哪些？</a><br>
+            </p>
+        </div>
+        <div class="col-md-4">
+            <p >选择您需要的推荐需求</p>
+            <p>
+                <a onclick="question_demo(7)">根据我以往的工作经历，有哪些职位可以推荐给我？</a><br>
+                <a onclick="question_demo(8)">按照我们公司算法工程师这个职位的技术要求，有哪些推荐的求职者？</a><br>
+            </p>
+        </div>
+    </div>
+
+    <div style="margin-bottom: 50em"></div>
+
+    <!--实体信息模态框-->
+    <div class="modal fade" id="entityInfoModal" tabindex="-1" role="dialog" aria-labelledby="entityInfoModalTitle" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only"></span></button>
+                    <h4 class="modal-title" id="entityInfoModalTitle">详细信息</h4>
+                </div>
+                <div class="modal-body">
+                    <img id="entityInfoModalImage" style="padding:1em;width:180px;"/>
+                    <table class="table">
+                        <tbody id="entityInfoModalTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/jquery-3.1.1.min.js"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/echarts-all-3.js"></script>
+
+    <script>
+
+        var all_data = undefined;
+
+        $.ajaxSetup({
+            error: function (e) {
+                console.log(e);
+                alert("没找到JSON文件");
+                return false;
+            }
+        });
+
+        $.getJSON('/static/json/demo.json', function(result){
+            all_data = result;
+            result['title'] = 'DEMO图谱全数据概览';
+            result['lighting'] = [];
+            paint_graph(result);
+        });
+
+        //示范问题
+        function question_demo(index){
+            var result = all_data;
+            switch(index) {
+                case 1:
+                  result['title'] = '为您标出阿里集团目前提供的职位';
+                  result['lighting'] = [1,12,13,14,15,16,17,18,19];
+                  break;
+                case 2:
+                  result['title'] = '为您标出王小明投出简历的其他公司';
+                  result['lighting'] = [1,15,49,48,22,2,6,0];
+                  break;
+                case 3:
+                  result['title'] = '为您标出月薪大于30000的职位';
+                  result['lighting'] = [13,25,27,28];
+                  break;
+                case 4:
+                  result['title'] = '共有 5 个客户经理职位，经比较，百度公司提供的职位工资最高，而腾讯公司提供的福利待遇最好';
+                  result['lighting'] = [9,15,26,22,25];
+                  break;
+                case 5:
+                  result['title'] = '经统计，北京市网络工程师的平均工资大约在15000-18000元左右';
+                  result['lighting'] = [10,41,33,16,17,12];
+                  break;
+                case 6:
+                  result['title'] = '经分析，目前前端开发工程师的普遍技术要求包括 HTML5 与 nodeJS 等';
+                  result['lighting'] = [18,19];
+                  break;
+                case 7:
+                  result['title'] = '根据您以往的工作经历，为您推荐以下相似岗位';
+                  result['lighting'] = [52,53,18,19,8,4,33];
+                  break;
+                case 8:
+                  result['title'] = '根据此职位的技术要求，为您推荐以下求职者';
+                  result['lighting'] = [34,50,51,52,53];
+                  break;
+                default:
+                  break;
+            }
+            paint_graph(result);
+        }
+
+        var colorPalette = ['#E01F54','#001852','#e05038','#CD8500','#009966',
+            '#00868B','#303030','#e6af4b','#89bdd3','#2e4783',
+            '#82b6e9','#ff6347','#a092f1','#0a915d','#7d4627',
+            '#6699FF','#ff6666','#3cb371','#d5b158','#38b6b6'
+        ];
+        var nodeSize = 35;
+        var fontSize = 15;
+
+        //绘图
+        function paint_graph(result){
+            $('#panel').remove();
+            $('#card0').append("<div id='panel' style='width: 100%;height: 900px'></div>");
+            var myChart = echarts.init(document.getElementById('panel'));
+                myChart.on('click', function (event) {
+                console.log(event);
+                if (event.dataType === 'node'){
+                    entity_info_show(event.data.id);
+                }
+            });
+            var nodes = [];
+            var links = [];
+            var categories = [];
+            var category_names = [];
+            result.nodes.forEach(function(node_origin){
+                var node = {'id':node_origin.id, 'name':node_origin.name, 'category':node_origin.category};
+                if (node['category'] === '人物'){
+                    node['category'] = node_origin.sublabel[0];
+                }
+                if ($.inArray(node.category,category_names) < 0){
+                    category_names.push(node.category);
+                    categories.push({
+                        name: node.category
+                    });
+                }
+                node.symbol = 'circle';
+                node.symbolSize = nodeSize;
+                node.x = null;
+                node.y = null;
+                node.itemStyle = null;
+                node.label = {
+                    normal: {
+                       show: true,
+                       position: 'right'
+                   }
+                };
+                nodes.push(node);
+            });
+            result.links.forEach(function(edge_origin){
+                var edge = {'id':edge_origin.id, 'source':edge_origin.source, 'target':edge_origin.target, 'name':edge_origin.name};
+                links.push(edge);
+            });
+            //点亮
+            nodes.forEach(function(node){
+                if ($.inArray(node.id,result['lighting']) >= 0)
+                    node.itemStyle = {
+                        normal: {
+                            borderColor:'yellow',
+                            borderWidth:15
+                        }
+                    };
+            });
+            links.forEach(function(link){
+                if (($.inArray(link.source,result['lighting'])>=0)&&($.inArray(link.target,result['lighting'])>=0))
+                    link.lineStyle = {
+                        normal: {
+                            color: 'yellow',
+                            width: 15
+                        }
+                    };
+            });
+
+            var option = {
+                color:colorPalette,
+                title: {
+                    text: result['title'],
+                    top: '1%',
+                    left: '1%',
+                    textStyle:{
+                        color:"#333333",
+                        fontSize: fontSize*1.2,
+                        fontWeight:'bolder'
+                    },
+                    subtext: '图中共有 '+result.nodes.length+' 个节点以及 '+result.links.length+' 条关系',
+                    subtextStyle:{
+                        color:"#333333",
+                        fontSize: fontSize,
+                        fontWeight:'bold'
+                    }
+                },
+                tooltip: {
+                    formatter: function (params) {
+                        if (params.dataType == 'node')
+                            return params.data.category;
+                        else
+                            return params.data.name;
+                    }
+                },
+                legend:[{
+                    data: categories,
+                    bottom: '1%',
+                    left: '1%',
+                    orient: 'vertical',
+                    selectedMode:false,
+                    textStyle:{
+                        color:'#333333'
+                    }
+                }],
+                series:[{
+                    type: 'graph',
+                    layout: 'force',
+                    data: nodes,
+                    links: links,
+                    categories: categories,
+                    lineStyle: {
+                        normal: {
+                            color: 'source',
+                            width: 2,
+                            curveness: 0.2
+                        }
+                    },
+                    force: {
+                        repulsion: 1000,
+                        layoutAnimation: false
+                    },
+                    roam: true,
+                    focusNodeAdjacency: true,
+                    animationDuration: 2000
+                }],
+                textStyle: {
+                    fontFamily: '微软雅黑',
+                    fontSize: fontSize
+                }
+            };
+            myChart.setOption(option);
+        }
+
+        //弹出模态框事件
+        function entity_info_show(id){
+            var title = $("#entityInfoModalTitle");
+            var table = $("#entityInfoModalTable");
+            var image = $("#entityInfoModalImage");
+            var node = all_data['nodes'][id];
+            if (all_data !== undefined){
+                title.text(node['name']);
+                if (node['category'] === '人物'){
+                    if (node['sublabel'][0] === '求职者')
+                        image.attr('src','/static/img/demo/pic1.png');
+                    else if (node['sublabel'][0] === '猎头')
+                        image.attr('src','/static/img/demo/pic2.png');
+                    else if (node['sublabel'][0] === '领导')
+                        image.attr('src','/static/img/demo/pic3.png');
+                }
+                else if (node['category'] === '公司')
+                    image.attr('src','/static/img/demo/pic6.png');
+                else if (node['category'] === '职位')
+                    image.attr('src','/static/img/demo/pic5.png');
+                else if (node['category'] === '简历')
+                    image.attr('src','/static/img/demo/pic4.png');
+                $('#entityInfoModalTable tr').remove();
+                for (var key in node){
+                    var value = "";
+                    if (key === 'name') continue;
+                    if (key === 'sublabel'){
+                        for (var index in node[key]){
+                            if (index > 0) value += " --><br>";
+                            value += node[key][index];
+                        }
+                    }
+                    else if (node[key] instanceof Array){
+                        for (index in node[key]){
+                            var subtable = "";
+                            for (var subkey in node[key][index]){
+                                subtable += "<tr><th>"+subkey+"</th><td>"+node[key][index][subkey]+"</td></tr>";
+                            }
+                            value += "<table class='table table-bordered'><tbody>"+subtable+"</tbody></table>";
+                        }
+                    }else if (node[key] instanceof Object){
+                        subtable = "";
+                        for (subkey in node[key]){
+                            subtable += "<tr><th>"+subkey+"</th><td>"+node[key][subkey]+"</td></tr>";
+                        }
+                        value = "<table class='table table-bordered'><tbody>"+subtable+"</tbody></table>";
+                    }
+                    else{
+                        value = node[key];
+                    }
+                    table.append("<tr><th>"+key+"</th><td>"+value+"</td></tr>");
+                }
+            }
+            $('#entityInfoModal').modal();
+        }
+
+    </script>
+
+
+
+
+</body>
+</html>

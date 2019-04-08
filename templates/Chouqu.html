@@ -1,0 +1,362 @@
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>Zhaopin Knowledge Graph V0.5</title>
+    <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/flat-ui.min.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/loading0.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/iconfont.css">
+
+    <style>
+        html,body{
+            margin:0;
+            height:100%;
+            font-size: 16px;
+        }
+        body{
+            text-align: center;
+            font-family: PingFang SC, Lantinghei SC, Microsoft Yahei, Hiragino Sans GB, Microsoft Sans Serif, WenQuanYi Micro Hei, sans;
+            background-color: #bbbbbb;
+            color:#060A0E;
+        }
+        .card{
+            margin: 2em auto;;
+            background-color: white;
+            border-radius: 0.5em;
+        }
+    </style>
+</head>
+<body>
+    <script type="text/javascript" src="http://www.echartsjs.com/gallery/vendors/echarts/echarts-all-3.js"></script>
+    <script src="/static/js/jquery-3.1.1.min.js"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+    <script src="/static/js/flat-ui.min.js"></script>
+    <script src="/static/js/application.js"></script>
+
+    
+    <style>
+        .my_nav{
+            border-radius: 0;
+            margin: 0;
+	    position: relative;
+	    z-index: 100000;
+        }
+    </style>
+
+    <nav class="my_nav navbar navbar-inverse navbar-lg " role="navigation">
+        <div class="navbar-header">
+            <div class="navbar-brand title" style="font-size: 1.2em">Event KG</div>
+        </div>
+        <ul class="nav navbar-nav">
+            <li><a href="/Tupu/">图谱</a></li>
+            <li><a href="/schema/">体系</a></li>
+            <li><a href="/display/">统计</a></li>
+            <li><a href="/Chouqu/">抽取</a></li>
+            <li><a href="/demo/">DEMO</a></li>
+            <li><a href="/recommend/">推荐</a></li>
+        </ul>
+        <div class="navbar-form navbar-left">
+            <div class="form-group" >
+                <div class="input-group" style="width: 300px">
+                    <input class="form-control" id="main_input" type="text" placeholder="输入待查询的问题" onkeydown="if(event.keyCode===13) jump()">
+                    <span class="input-group-btn" style="text-align: left">
+                        <button type="button" class="btn" onclick="jump()"><span class="iconfont icon-sousuo" aria-hidden="true"></span></button>
+                    </span>
+                </div>
+            </div>
+            <button class="btn btn-default btn-sm" type="button" onclick="$('#sampleQuestionModal').modal();">示例</button>
+        </div>
+    </nav>
+    <!--示例问题模态框-->
+    <div class="modal fade" id="sampleQuestionModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only"></span></button>
+                    <h4 class="modal-title" id="entitySelectModalTitle" >示例问题</h4>
+                </div>
+                <div class="modal-body">
+                    <p><a href="#" class="sampleQuestionItem">搜狐焦点发布了哪些招聘公告</a></p>
+                    <p><a href="#" class="sampleQuestionItem">简历:246607018所取得的最高学历是什么</a></p>
+                    <p><a href="#" class="sampleQuestionItem">招聘:天猫售前客服被曝光到哪些简历</a></p>
+                    <p><a href="#" class="sampleQuestionItem">用户:121512439浏览过哪些公告</a></p>
+                    <p><a href="#" class="sampleQuestionItem">招聘:高级Android开发工程师有哪些技能要求</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        $(".navbar-nav li [href='"+window.location.pathname+"']").parent().addClass("active");
+
+        var main_input = $("#main_input");
+
+        $(".sampleQuestionItem").each(function(){
+            $(this).click(function(){
+                $("#sampleQuestionModal").modal("hide");
+                main_input.val($(this).text());
+                jump();
+            });
+        });
+
+        function jump(){
+            var question = $.trim(main_input.val());
+            if (question !== ""){
+                if (window.location.pathname==="/"){
+                    getData(question);
+                }
+                else{
+                    window.location.href = "/?q="+question;
+                }
+            }
+            main_input.val("");
+        }
+
+    </script>
+
+    
+    <style>
+        p{
+            font-size: 1.2em;
+            font-weight: bold;
+            padding: 1em;
+        }
+        .card{
+            width:1200px;
+        }
+        .container{
+            width: 98%;
+            height: 500px;
+        }
+        th{
+            text-align: center;
+        }
+    </style>
+
+    <div class="card">
+        <p>触发词抽取：实例</p>
+        <textarea class="text_area" rows="4" style="width: 60%;font-size: 1em"></textarea>
+        <div style="margin: 1em 0"><button class="btn btn-primary" type="button" onclick="ability_extract()">提交</button></div>
+        <div style="border-radius: 1em;border: dashed gray 1px;width: 90%;margin: auto">
+            <div class="container" id="container_ability_extract_result"></div>
+        </div>
+        <p>触发词抽取：过程说明</p>
+        <img src="/static/img/ppt/how_to_make_ability.PNG" style="width: 90%"/>
+        <p></p>
+
+    </div>
+
+    
+<style>
+    .footer{
+        width:100%;
+        text-align: center;
+        font-family: Helvetica;
+        padding: 2em 0;
+    }
+    .footer p{
+        font-size: 0.9em;
+    }
+</style>
+
+<div class="footer">
+    <hr style="height:1px;border:none;width:30%;border-top:1px solid gray" />
+    <p style="font-weight:bold;font-size:1.2em">Copyright © 2017-2018</p>
+    <p >BDBC Lab of BeiHang University & Zhaopin.com</p>
+</div>
+
+    <script>
+    var text_area = $(".text_area");
+    text_area.val("1.90后、全日制本科或以上学历；2.具备较强的好奇心及独立思考的能力，对商业有强烈兴趣；3.具有较好的归纳能力与较好的文字和语言表达能力，熟练掌握PPT及Excel；4.接触过至少一种分析软件，如SAS/SPSS等；5.接触过至少一种数据库软件，如：Oracle、MySQL、SQL Server等，会编写简单的SQL查询语句；6.好学善思，积极上进，有责任心及良好的团队合作精神。");
+    ability_extract();
+
+    function ability_extract(){
+        var content = text_area.val();
+        if ($.trim(content) !== ""){
+            $.getJSON("/api/extract/ability/?content="+content, function (result){
+                console.log(result);
+                repaint(result);
+            });
+        }
+    }
+
+    var myChart = null;
+    function repaint(result){
+        //对mychart的初始化
+        if (myChart)
+            myChart.clear();
+        else
+            myChart = echarts.init(document.getElementById('container_ability_extract_result'));
+        //刷新绘图页面
+        var nodeSize = 50;
+        var fontSize = 14;
+        var nodes = [];
+        var links = [];
+        var categories = [];
+        result.nodes.forEach(function(node){
+            if ($.inArray(node.name,categories) < 0){
+                categories.push({
+                    name: node.name
+                });
+            }
+            node.category=node.name;
+            node.symbol = 'circle';
+            node.symbolSize = nodeSize;
+            node.x = null;
+            node.y = null;
+            node.itemStyle = null;
+            node.label = {
+                normal: {
+                    show: true,
+                    position: 'right'
+                }
+            };
+            nodes.push(node);
+        });
+        result.links.forEach(function(edge){
+            links.push(edge);
+        });
+        var option = {
+            title: {
+                text: '抽取到的技能',
+                top: '2%',
+                textStyle:{
+                    color:"#333333",
+                    fontSize: fontSize*1.8,
+                    fontWeight:'bolder'
+                },
+                subtext: '图中共有 '+result.nodes.length+' 个节点以及 '+result.links.length+' 条关系',
+                subtextStyle:{
+                    color:"#333333",
+                    fontSize: fontSize,
+                    fontWeight:'bold'
+                }
+            },
+            tooltip: {
+                formatter: function (params) {
+                    if (params.dataType === 'node')
+                        return params.data.category;
+                    else
+                        return params.data.name;
+                }
+            },
+            series:[{
+                type: 'graph',
+                layout: 'force',
+                data: nodes,
+                links: links,
+                categories: categories,
+                lineStyle: {
+                    normal: {
+                        color: 'source',
+                        width: 3,
+                        curveness: 0.2
+                    }
+                },
+                force: {
+                    repulsion: 1000,
+                    layoutAnimation: false
+                },
+                roam: true,
+                focusNodeAdjacency: true,
+                animationDuration: 2000
+            }],
+            textStyle: {
+                fontFamily: '微软雅黑',
+                fontSize: fontSize,
+                fontWeight:'bold'
+            }
+        };
+        myChart.setOption(option);
+    }
+
+    //技能表
+    $.getJSON('/static/json/ability_cluster.json', function (data) {
+        var myChart = echarts.init(document.getElementById('container_ability_list'));
+        var formatUtil = echarts.format;
+        function getLevelOption() {
+            return [
+                {
+                    itemStyle: {
+                        normal: {
+                            borderColor: '#555',
+                            borderWidth: 5,
+                            gapWidth: 5
+                        }
+                    }
+                },
+                {
+                    colorSaturation: [0.3, 0.4],
+                    itemStyle: {
+                        normal: {
+                            borderWidth: 5,
+                            gapWidth: 1,
+                            borderColorSaturation: 0.6
+                        }
+                    }
+                }
+            ];
+        }
+        myChart.setOption(option = {
+            tooltip: {
+                formatter: function (info) {
+                    var treePathInfo = info.treePathInfo;
+                    var treePath = [];
+                    for (var i = 0; i < treePathInfo.length; i++) {
+                        treePath.push(treePathInfo[i].name);
+                    }
+                    return [formatUtil.encodeHTML(treePath.join('/'))].join('');
+                }
+            },
+            series: [
+                {
+                    name:'技能',
+                    type:'treemap',
+                    visibleMin: 0,
+                    roam:false,
+                    nodeClick:false,
+                    top:"1%",
+                    bottom:"1%",
+                    width:"95%",
+                    zoomToNodeRatio:0.3,
+                    label: {
+                        normal: {
+                            show: true,
+                            formatter: '{b}',
+                            textStyle:{
+                                fontSize:12
+                            }
+                        }
+                    },
+                    upperLabel: {
+                        normal: {
+                            show: true,
+                            height: 30,
+                            textStyle:{
+                                fontSize:15
+                            }
+                        }
+                    },
+                    itemStyle: {
+                        normal: {
+                            borderColor: '#fff'
+                        }
+                    },
+                    breadcrumb:{
+                        show:false
+                    },
+                    levels: getLevelOption(),
+                    data: data
+                }
+            ]
+        });
+    });
+    </script>
+
+
+
+</body>
+</html>
