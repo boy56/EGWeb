@@ -33,6 +33,7 @@ class TriggerNode(GraphObject):
     name = Property()
     verb = Property()
     noun = Property()
+    themeCount = Property()
 
     belong_tos = RelatedTo('EventNode', 'BELONG_TO')
     next_triggers = RelatedTo('TriggerNode', 'NEXT_TRIGGER')

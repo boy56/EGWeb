@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <title>Zhaopin Knowledge Graph V0.5</title>
+    <title>Event Knowledge Graph V0.1</title>
     <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.css">
     <link rel="stylesheet" type="text/css" href="/static/css/flat-ui.min.css">
     <link rel="stylesheet" type="text/css" href="/static/css/loading0.css">
@@ -25,15 +25,17 @@
             background-color: white;
             border-radius: 0.5em;
         }
+        .echartsTooltipP{
+            font-size:16px;
+        }
     </style>
 </head>
 <body>
-    <script type="text/javascript" src="http://www.echartsjs.com/gallery/vendors/echarts/echarts-all-3.js"></script>
+    <script type="text/javascript" src="/static/js/echarts.js"></script>
     <script src="/static/js/jquery-3.1.1.min.js"></script>
     <script src="/static/js/bootstrap.min.js"></script>
     <script src="/static/js/flat-ui.min.js"></script>
     <script src="/static/js/application.js"></script>
-
     
     <style>
         .my_nav{
@@ -50,11 +52,8 @@
         </div>
         <ul class="nav navbar-nav">
             <li><a href="/Tupu/">图谱</a></li>
-            <li><a href="/schema/">体系</a></li>
-            <li><a href="/display/">统计</a></li>
             <li><a href="/Chouqu/">抽取</a></li>
-            <li><a href="/demo/">DEMO</a></li>
-            <li><a href="/recommend/">推荐</a></li>
+            <li><a href="/Common/">共性</a></li>
         </ul>
         <div class="navbar-form navbar-left">
             <div class="form-group" >
@@ -74,14 +73,14 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only"></span></button>
-                    <h4 class="modal-title" id="entitySelectModalTitle" >示例问题</h4>
+                    <!--<h3 class="modal-title" id="entitySelectModalTitle" >示例问题</h4>-->
                 </div>
                 <div class="modal-body">
-                    <p><a href="#" class="sampleQuestionItem">搜狐焦点发布了哪些招聘公告</a></p>
-                    <p><a href="#" class="sampleQuestionItem">简历:246607018所取得的最高学历是什么</a></p>
-                    <p><a href="#" class="sampleQuestionItem">招聘:天猫售前客服被曝光到哪些简历</a></p>
-                    <p><a href="#" class="sampleQuestionItem">用户:121512439浏览过哪些公告</a></p>
-                    <p><a href="#" class="sampleQuestionItem">招聘:高级Android开发工程师有哪些技能要求</a></p>
+                    <p><a href="#" class="sampleQuestionItem">T_发现</a></p>
+                    <p><a href="#" class="sampleQuestionItem">T_发现-尸体</a></p>
+                    <p><a href="#" class="sampleQuestionItem">E_李文星</a></p>
+                    <p><a href="#" class="sampleQuestionItem">E_魏则西</a></p>
+                    <p><a href="#" class="sampleQuestionItem">ET_李文星</a></p>
                 </div>
             </div>
         </div>
@@ -186,9 +185,6 @@
         </div>
     </div>
 
-    <script src="/static/js/jquery-3.1.1.min.js"></script>
-    <script src="/static/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/echarts-all-3.js"></script>
 
     <script>
 
@@ -201,12 +197,24 @@
                 return false;
             }
         });
-
+        /*
         $.getJSON('/static/json/demo.json', function(result){
             all_data = result;
             result['title'] = 'DEMO图谱全数据概览';
             result['lighting'] = [];
             paint_graph(result);
+        });
+        */
+         $.getJSON("{% url 'find_common_url' %}", function(result){     //$.ajax的get请求的一个上层封装
+            console.log(result);
+            /*
+            if(result.status == 0){
+                alert("查询格式有误");
+                return;
+            }
+            */
+            paint_graph(result);
+            
         });
 
         //示范问题
@@ -260,9 +268,11 @@
         var fontSize = 15;
 
         //绘图
+        /*
         function paint_graph(result){
             $('#panel').remove();
             $('#card0').append("<div id='panel' style='width: 100%;height: 900px'></div>");
+            
             var myChart = echarts.init(document.getElementById('panel'));
                 myChart.on('click', function (event) {
                 console.log(event);
@@ -270,6 +280,7 @@
                     entity_info_show(event.data.id);
                 }
             });
+
             var nodes = [];
             var links = [];
             var categories = [];
@@ -386,6 +397,303 @@
             };
             myChart.setOption(option);
         }
+        */
+        //绘图
+        function paint_graph(result){
+            $('#panel').remove();
+            $('#card0').append("<div id='panel' style='width: 100%;height: 900px'></div>");
+
+            //对mychart的初始化
+            if (myChart)
+                myChart.clear();
+            else {
+                myChart = echarts.init(document.getElementById('panel'));
+            }
+            
+            //刷新绘图页面
+            var categories = [];
+            var nodeMap = {};		//触发词名字与node对象字典
+            var nodeList = [];
+            var edgeMaxW = 0;	//边的权重最大值
+            var edgeMinW = 0;	//边的权重最小值
+
+            var fontSize = 14;
+                
+            //设置类别
+            categories[0] = {
+                name:'Trigger-Start', 
+                itemStyle: {
+                    color:'#36871d'
+                }
+            };
+                
+            categories[1] = {
+                name:'Trigger-Middle',
+                itemStyle: {
+                    color:'#105498'
+                }
+            };
+                
+            categories[2] = {
+                name:'Trigger-End',
+                itemStyle: {
+                    //color:'#bda29a'
+                    color:'#c1291f'
+                }
+            };
+                
+            //分拣出触发词与事件信息
+            result.nodes.forEach(function (node) {
+                node.isSource = false;
+                node.isTarget = false;
+                nodeList.push(node);
+                nodeMap[node.ID] = node;
+            });
+
+            //寻找边的权重最大值与最小值, 并设置节点的类型(source、middle、target)
+            result.edges.forEach(function (edge){
+                nodeMap[edge.sourceID].isSource = true;		
+                nodeMap[edge.targetID].isTarget = true;
+            
+                if(edgeMaxW == 0 && edgeMinW == 0){
+                    edgeMaxW = edge.weight;
+                    edgeMinW = edge.weight;
+                }else if(edge.weight > edgeMaxW){
+                    edgeMaxW = edge.weight;
+                }else if(edge.weight < edgeMinW){
+                    edgeMinW = edge.weight;
+                }
+                
+                //设置echarts中使用到的edge属性
+                edge.label = {
+                    formatter: "weight: " + edge.weight
+                };
+
+                /*
+                    Echarts的links的source target可以为边的源节点名称的字符串，也支持使用数字表示源节点的索引，所以创建links链接数据节点时source target使用字符串就是使用data节点的id属性指定的值，使用int就是使用data数据的在数组中的索引位置，而不是id值。
+                */
+                edge.source = "" + edge.sourceID;
+                edge.target = "" + edge.targetID;
+                edge.lineStyle = {
+                    normal: {}
+                };
+            });
+                
+            //对触发词节点相关属性进行设置
+            nodeList.forEach(function (node) {
+                //区分起始节点、中间节点和结束节点
+                if(node.isSource && node.isTarget){
+                    node.category = 1;	//中间节点
+                }else if(node.isSource){
+                    node.category = 0;  //起始节点
+                }else if(node.isTarget){
+                    node.category = 2;  //结束节点
+                }else{
+                    //当前应该不存在孤立点
+                    console.log("Warning: " + node.name + " is neither a source nor a target");
+                }
+                
+                node.id = "" + node.ID
+                if(node.TYPE == "EVENT"){
+                    node.name = node.title
+                }else{
+                    node.name = node.name
+                }
+            
+                //node.itemStyle = null;	
+                node.symbolSize = 40;	//触发词大小
+                //node.category = 0;
+                node.label = {
+                    show: true
+                };
+            });
+                
+            //根据边的权重设置颜色
+            result.edges.forEach(function (edge){
+                var lineWidth;
+                var colorWeight;
+                if(edgeMaxW - edgeMinW == 0){
+                    colorWeight = 150;
+                }else{
+                    colorWeight = 255 - (edge.weight - edgeMinW)/(edgeMaxW - edgeMinW) * 255;	 //映射到(0,255)
+                }
+                
+                //var colorWeight = (edge.weight - edgeMinW)/(edgeMaxW - edgeMinW) * 0.5 + 0.5;	 //映射到(0.5,1)
+                var lineColor = 'rgb(0,' + colorWeight + ',255)';
+                //var lineColor = 'rgba(0, 191, 255, ' + colorWeight + ')';
+                
+                edge.lineStyle = {
+                    width: 1,
+                    //width: lineWidth,
+                    color: lineColor,
+                    //type: 'dashed'
+                    type: 'solid'
+                }
+            });
+                
+            //ECharts配置项信息
+            option = {
+                title: {
+                    text: result.answer,
+                    top: '1%',
+                    left: '1%',
+                    textStyle:{
+                        color:"#333333",
+                        fontSize: fontSize*1.8,
+                        fontWeight:'bolder'
+                    },
+                    subtext: '图中共有 '+result.nodes.length+' 个节点以及 '+result.edges.length+' 条关系',
+                    subtextStyle:{
+                        color:"#333333",
+                        fontSize: fontSize,
+                        fontWeight:'bold'
+                    }
+                },
+                tooltip:{
+                    //triggerOn: 'click',
+                    confine: true,	//是否将tooltip框限制在图表的区域内。
+                    enterable: true, //鼠标是否可以进入悬浮层
+                    formatter: function(params, ticket, callback){
+                        //console.log(params);
+                        if(params.dataType == 'node'){	//触发词对应的事件描述信息
+                            var nodeInfo = params.data;
+                            var showHtm = '';
+                            if(nodeInfo.TYPE == 'EVENT'){
+                                showHtm += '<p class="echartsTooltipP" align="left">Event: ' + nodeInfo.title + '</p>';
+                                showHtm += '<p class="echartsTooltipP" align="left">Date: ' + nodeInfo.time + '</p>';
+                                showHtm += '<p class="echartsTooltipP" align="left">Person: ' + nodeInfo.persons + '</p>';
+                                showHtm += '<p class="echartsTooltipP" align="left">Location: ' + nodeInfo.locations + '</p>';
+                                showHtm += '<p class="echartsTooltipP" align="left">Organization: ' + nodeInfo.organizations + '</p>';
+                                showHtm += '<p class="echartsTooltipP" align="left">Keywords: ' + nodeInfo.keywords + '</p>';
+                                showHtm += '<p class="echartsTooltipP" align="left">Trigger: ' + nodeInfo.triggers + '</p>';
+                            }else {
+                                showHtm += '<p class="echartsTooltipP" align="left"> Name: ' + nodeInfo.name + '</p>';
+                                showHtm += '<p class="echartsTooltipP" align="left"> Verb: ' + nodeInfo.verb + '</p>';
+                                showHtm += '<p class="echartsTooltipP" align="left"> Noun: ' + nodeInfo.noun + '</p>';
+                                showHtm += '<br>';
+                                nodeInfo.events.forEach(function(e){
+                                    showHtm += '<p class="echartsTooltipP" align="left">Event: ' + e.title + '</p>';
+                                    showHtm += '<p class="echartsTooltipP" align="left">Theme: ' + e.theme + '</p>';
+                                    showHtm += '<br>';
+                                });
+
+                                
+                            }
+                            return showHtm;
+                        }else if(params.dataType == 'edge'){	//连接边对应的事件描述信息
+                            var showHtm = '';
+                            showHtm += params.data.source + ' -> ' + params.data.target + '<br>';
+                            showHtm += 'Weight: ' + params.data.weight + '<br>';
+                            return showHtm;
+                        }
+                    }
+                },
+                toolbox: {
+                    feature: {
+                        saveAsImage: {}
+                    }
+                },
+                legend: [{
+                    // selectedMode: 'single',
+                    show: true,
+                    orient: 'vertical',
+                    right: 10,
+                    top: 20,
+                    bottom: 20,
+                    data: categories.map(function (a) {
+                        return a.name;
+                    }),
+                    
+                    selected:{
+                        "Trigger-Source": true,
+                        "Trigger-Middle": true,
+                        "Trigger-End": true
+                    }
+                    
+                }],
+                
+                
+                //视觉映射组件
+                visualMap:{
+                    //left: 'right',
+                    right: '2.5%',
+                    bottom: '10%',
+                    itemHeight: 120,
+                    text: ['Edge Weight'],
+                    textGap: 30,
+                    hoverLink: false,
+                    seriesIndex: result.edges,
+                    inRange: {
+                        color: ['rgb(0,255,255)', 'rgb(0,0,255)']
+                    },
+                    outOfRange: {
+                        color: ['rgba(255,255,255,.2)']
+                    }
+                    
+                },
+                
+                animationDuration: 1500,
+                animationEasingUpdate: 'quinticInOut',
+                series : [
+                    {
+                        name: 'Event Graph',
+                        type: 'graph',
+                        layout: 'force',
+                        force:{
+                            repulsion: 3000,		//斥力因子
+                            edgeLength: [0.1,100],
+                            layoutAnimation: true	//布局过程动画是否开启
+                        },
+                        draggable: true,	//节点是否可拖拽
+                        data: result.nodes,
+                        links: result.edges,
+                        categories: categories,
+                        roam: true,
+                        focusNodeAdjacency: true,
+                        edgeSymbol:['none','arrow'],
+                        edgeSymbolSize: 20,
+                        //left: '10%',
+                        //top: '10%',
+                        //right: '10%',
+                        //bottom: '10%',
+                        itemStyle: {
+                            normal: {
+                                borderColor: '#fff',
+                                borderWidth: 1,
+                                shadowBlur: 10,
+                                shadowColor: 'rgba(0, 0, 0, 0.3)'
+                            }
+                        },
+                        label: {
+                            normal: {
+                                position: 'right',
+                                formatter: '{b}',
+                                fontSize: 18
+                            }
+                        },
+                        lineStyle: {
+                            normal: {
+                                curveness: 0.3,
+                            }
+                        },
+                        emphasis: {
+                            lineStyle:{
+                                width: 10
+                                //type: 'solid'
+                            },
+                            edgeLabel:{
+                                show: true
+                            },
+                            label:{
+                                show: true
+                            }
+                        }
+                    }
+                ]
+            };
+            myChart.setOption(option);
+        }
+    
 
         //弹出模态框事件
         function entity_info_show(id){

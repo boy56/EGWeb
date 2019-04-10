@@ -3,7 +3,7 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <title>Zhaopin Knowledge Graph V0.5</title>
+    <title>Event Knowledge Graph V0.1</title>
     <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.css">
     <link rel="stylesheet" type="text/css" href="/static/css/flat-ui.min.css">
     <link rel="stylesheet" type="text/css" href="/static/css/loading0.css">
@@ -26,15 +26,17 @@
             background-color: white;
             border-radius: 0.5em;
         }
+        .echartsTooltipP{
+            font-size:16px;
+        }
     </style>
 </head>
 <body>
-    <script type="text/javascript" src="http://www.echartsjs.com/gallery/vendors/echarts/echarts-all-3.js"></script>
+    <script type="text/javascript" src="/static/js/echarts.js"></script>
     <script src="/static/js/jquery-3.1.1.min.js"></script>
     <script src="/static/js/bootstrap.min.js"></script>
     <script src="/static/js/flat-ui.min.js"></script>
     <script src="/static/js/application.js"></script>
-
     
     <style>
         .my_nav{
@@ -51,11 +53,8 @@
         </div>
         <ul class="nav navbar-nav">
             <li><a href="/Tupu/">图谱</a></li>
-            <li><a href="/schema/">体系</a></li>
-            <li><a href="/display/">统计</a></li>
             <li><a href="/Chouqu/">抽取</a></li>
-            <li><a href="/demo/">DEMO</a></li>
-            <li><a href="/recommend/">推荐</a></li>
+            <li><a href="/Common/">共性</a></li>
         </ul>
         <div class="navbar-form navbar-left">
             <div class="form-group" >
@@ -75,14 +74,14 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only"></span></button>
-                    <h4 class="modal-title" id="entitySelectModalTitle" >示例问题</h4>
+                    <!--<h3 class="modal-title" id="entitySelectModalTitle" >示例问题</h4>-->
                 </div>
                 <div class="modal-body">
-                    <p><a href="#" class="sampleQuestionItem">搜狐焦点发布了哪些招聘公告</a></p>
-                    <p><a href="#" class="sampleQuestionItem">简历:246607018所取得的最高学历是什么</a></p>
-                    <p><a href="#" class="sampleQuestionItem">招聘:天猫售前客服被曝光到哪些简历</a></p>
-                    <p><a href="#" class="sampleQuestionItem">用户:121512439浏览过哪些公告</a></p>
-                    <p><a href="#" class="sampleQuestionItem">招聘:高级Android开发工程师有哪些技能要求</a></p>
+                    <p><a href="#" class="sampleQuestionItem">T_发现</a></p>
+                    <p><a href="#" class="sampleQuestionItem">T_发现-尸体</a></p>
+                    <p><a href="#" class="sampleQuestionItem">E_李文星</a></p>
+                    <p><a href="#" class="sampleQuestionItem">E_魏则西</a></p>
+                    <p><a href="#" class="sampleQuestionItem">ET_李文星</a></p>
                 </div>
             </div>
         </div>

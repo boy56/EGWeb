@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -11,8 +12,8 @@ def chouqu(request):
 def tupu(request):
     return render(request, 'Tupu.html')
 
-def demo(request):
-    return render(request, 'demo.html')
+def common(request):
+    return render(request, 'Common.html')
 
 
 # 某些情况下django中间件会进行保护, 阻挡post请求从而出现403错误
@@ -45,6 +46,10 @@ def search(request):
         result['nodes'] = []
         result['edges'] = []
 
+    return JsonResponse(result)
+
+def find_common_pattern(request):
+    result = {}
     return JsonResponse(result)
 
 

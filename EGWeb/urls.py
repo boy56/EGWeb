@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """EGWeb URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
@@ -21,9 +22,10 @@ urlpatterns = [
     path('', view.tupu),
     path('Tupu/', view.tupu),
     path('Chouqu/', view.chouqu),
-    path('demo/', view.demo),
+    path('Common/', view.common),
 
     # 以下为api
     path('api/graph/search/', view.search, name='search_url'),
+    path('api/graph/find_common/', view.find_common_pattern, name='find_common_url')
    
 ] 

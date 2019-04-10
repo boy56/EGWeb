@@ -41,6 +41,7 @@ def adddata(filepath, graph, theme):
             trigger.name = name
             trigger.verb = verb
             trigger.noun = noun
+            trigger.themeCount += 1
             trigger_nodes[trigger_id] = trigger
         elif node.attrib['labels'] == ":EVENTNODE":
             # event node
@@ -124,11 +125,13 @@ def creat_eventNode(name, graph):
 
 def creat_triggerNode(name, graph):
     results = list(TriggerNode.match(graph, name))
-    if(len(results) == 0): 
-        return TriggerNode()
+    if(len(results) == 0):
+        trigger = TriggerNode()
+        trigger.themeCount = 0 
+        return trigger
     else:
         return results[0]
 
 if __name__ == '__main__':
     graph = Graph(password='123456')
-    adddata("../data/李文星_Sample.xml", graph, "李文星")
+    adddata("../data/徐玉玉.xml", graph, "徐玉玉")

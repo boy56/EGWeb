@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from py2neo import Graph
 from EGWeb.models import TriggerNode, EventNode
 from py2neo.data import Node
@@ -109,7 +110,7 @@ def search_trigger_by_name(triname):
                 node_dict['verb'] = next_t.verb
                 node_dict['noun'] = next_t.noun
                 node_dict['events'] = []
-                for e in t.belong_tos:
+                for e in next_t.belong_tos:
                     event_info = {}
                     event_info['title'] = e.title
                     event_info['theme'] = e.theme
@@ -173,6 +174,11 @@ def search_trigger_by_theme(theme):
     result_data['status'] = 1  # 1代表成功, 0代表失败
     result_data['nodes'] = nodes_list
     result_data['edges'] = edges_list
+    return result_data
+
+
+def find_common():
+    result_data = {}
     return result_data
 
 if __name__ == '__main__':
