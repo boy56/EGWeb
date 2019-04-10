@@ -3,7 +3,7 @@ from EGWeb.models import TriggerNode, EventNode
 from py2neo.data import Node
 
 graph = Graph(
-    "bolt://127.0.0.1:7687", username="neo4j", password="sjh19970201"
+    "bolt://127.0.0.1:7687", username="neo4j", password="123456"
 )
 
 
@@ -15,6 +15,7 @@ def search_event_by_theme(theme):
     edges_list = []  # [{sourseID:.., targetID:..., weight:...}, {sourseID:..., targetID:..., weight:...}, ...]
 
     event_nodes = list(EventNode.match(graph).where("_.theme=" + "\'" + theme + "\'"))
+
     if len(event_nodes) == 0:   # 未查找到相关信息
         result_data['status'] = 0  # 1代表成功, 0代表失败
         result_data['nodes'] = nodes_list

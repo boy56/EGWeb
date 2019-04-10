@@ -91,7 +91,7 @@ def adddata(filepath, graph, theme):
     for e in event_nodes.values():
         # 找到当前事件e的触发词集合T1
         # 得到该触发词集合的next集合T2
-        # 得到T2的事件集合E2
+        # 得到T2的事件集合E2        当出现一个触发词多个事件时, 此操作会引入其他事件的节点, 因此需要进行一部过滤操作  bug date: 2019-04-10
         # 构建e -> E2 - {e}的事件关系
         next_trigger_set = set()  # T2集合
         next_event_set = set()  # E2集合
@@ -101,7 +101,8 @@ def adddata(filepath, graph, theme):
         # print(len(next_trigger_set))
         for next_t in next_trigger_set:
             for re_e in next_t.belong_tos:
-                next_event_set.add(re_e)  # 获取E2集合
+                if re_e.theme == theme: # 当出现一个触发词多个事件时, 得到E2集合的过程会引入其他事件的节点, 因此需要进行一部过滤操作  bug date: 2019-04-10
+                    next_event_set.add(re_e)  # 获取E2集合
         # print(len(next_event_set))
 
         if e in next_event_set:
@@ -117,6 +118,9 @@ def adddata(filepath, graph, theme):
         graph.push(t_n)
 
     return 0
+'''
+def creat_eventNode(name, graph):
+'''
 
 def creat_triggerNode(name, graph):
     results = list(TriggerNode.match(graph, name))
@@ -126,5 +130,5 @@ def creat_triggerNode(name, graph):
         return results[0]
 
 if __name__ == '__main__':
-    graph = Graph(password='sjh19970201')
-    adddata("../data/徐玉玉.xml", graph, "徐玉玉")
+    graph = Graph(password='123456')
+    adddata("../data/李文星_Sample.xml", graph, "李文星")
