@@ -20,8 +20,8 @@ from . import view
 
 urlpatterns = [
     path('', view.tupu),
-    path('Tupu/', view.tupu),
-    path('Chouqu/', view.chouqu),
+    path('Graph/', view.tupu),
+    path('Extract/', view.chouqu),
     path('Common/', view.common),
 
     # 以下为api

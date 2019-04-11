@@ -51,8 +51,8 @@
             <div class="navbar-brand title" style="font-size: 1.2em">Event KG</div>
         </div>
         <ul class="nav navbar-nav">
-            <li><a href="/Tupu/">图谱</a></li>
-            <li><a href="/Chouqu/">抽取</a></li>
+            <li><a href="/Graph/">图谱</a></li>
+            <li><a href="/Extract/">抽取</a></li>
             <li><a href="/Common/">共性</a></li>
         </ul>
         <div class="navbar-form navbar-left">
@@ -402,7 +402,7 @@
         function paint_graph(result){
             $('#panel').remove();
             $('#card0').append("<div id='panel' style='width: 100%;height: 900px'></div>");
-
+            var myChart = null;
             //对mychart的初始化
             if (myChart)
                 myChart.clear();
@@ -421,21 +421,21 @@
                 
             //设置类别
             categories[0] = {
-                name:'Trigger-Start', 
+                name:'Start', 
                 itemStyle: {
                     color:'#36871d'
                 }
             };
                 
             categories[1] = {
-                name:'Trigger-Middle',
+                name:'Middle',
                 itemStyle: {
                     color:'#105498'
                 }
             };
                 
             categories[2] = {
-                name:'Trigger-End',
+                name:'End',
                 itemStyle: {
                     //color:'#bda29a'
                     color:'#c1291f'
@@ -612,7 +612,7 @@
                     
                 }],
                 
-                
+                /*
                 //视觉映射组件
                 visualMap:{
                     //left: 'right',
@@ -631,7 +631,7 @@
                     }
                     
                 },
-                
+                */
                 animationDuration: 1500,
                 animationEasingUpdate: 'quinticInOut',
                 series : [

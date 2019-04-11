@@ -3,14 +3,14 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from EGWeb.dataservice import search_event_by_theme, search_trigger_by_name, search_trigger_by_theme
+from EGWeb.dataservice import search_event_by_theme, search_trigger_by_name, search_trigger_by_theme, find_common
 
 
 def chouqu(request):
-    return render(request, 'Chouqu.html')
+    return render(request, 'Extract.html')
 
 def tupu(request):
-    return render(request, 'Tupu.html')
+    return render(request, 'Graph.html')
 
 def common(request):
     return render(request, 'Common.html')
@@ -49,7 +49,9 @@ def search(request):
     return JsonResponse(result)
 
 def find_common_pattern(request):
-    result = {}
+    result = find_common(1)
+    result['answer'] = "相似事件的共性展示"
+    result['status'] = 1
     return JsonResponse(result)
 
 

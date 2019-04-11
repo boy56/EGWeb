@@ -177,8 +177,68 @@ def search_trigger_by_theme(theme):
     return result_data
 
 
-def find_common():
+def find_common(paraCount):
+    """
+    寻找数据图中的共性触发词
+    :param paraCount: 事件个数参数, 大于该值的触发词将会被挑选出来, 可以理解为对触发词权重的筛选
+    :return:
+    """
     result_data = {}
+    nodes_list = []
+    edges_list = []  # [{sourseID:.., targetID:..., weight:...}, {sourseID:..., targetID:..., weight:...}, ...]
+    tri_nodes = list(TriggerNode.match(graph).where("_.themeCount>" +  str(paraCount)))
+
+    tri_node_set = set()
+    # 根据触发词的下一步关系扩充node节点
+    for t in tri_nodes:
+        if t not in tri_node_set:
+            node_dict = {}
+            # node_dict['ID'] = t.__node__.__uuid__
+            node_dict['ID'] = t.__node__.identity
+            node_dict['TYPE'] = "TRIGGER"
+            node_dict['name'] = t.name
+            node_dict['verb'] = t.verb
+            node_dict['noun'] = t.noun
+            node_dict['events'] = []
+            for e in t.belong_tos:
+                event_info = {}
+                event_info['title'] = e.title
+                event_info['theme'] = e.theme
+                node_dict['events'].append(event_info)
+            tri_node_set.add(t)
+            nodes_list.append(node_dict)
+
+            # print(t.__node__.__uuid__)
+
+        for next_t in t.next_triggers:
+            if next_t not in tri_node_set:
+                node_dict = {}
+                # node_dict['ID'] = next_t.__node__.__uuid__
+                node_dict['ID'] = next_t.__node__.identity
+                node_dict['TYPE'] = "TRIGGER"
+                node_dict['name'] = next_t.name
+                node_dict['verb'] = next_t.verb
+                node_dict['noun'] = next_t.noun
+                node_dict['events'] = []
+                for e in next_t.belong_tos:
+                    event_info = {}
+                    event_info['title'] = e.title
+                    event_info['theme'] = e.theme
+                    node_dict['events'].append(event_info)
+                tri_node_set.add(next_t)
+                nodes_list.append(node_dict)
+            edge_dict = {}
+            # edge_dict['sourceID'] = t.__node__.__uuid__
+            # edge_dict['targetID'] = next_t.__node__.__uuid__
+            edge_dict['sourceID'] = t.__node__.identity
+            edge_dict['targetID'] = next_t.__node__.identity
+            edge_dict['weight'] = 1
+            edges_list.append(edge_dict)
+
+    # 构造返回数据
+    result_data['status'] = 1  # 1代表成功, 0代表失败
+    result_data['nodes'] = nodes_list
+    result_data['edges'] = edges_list
     return result_data
 
 if __name__ == '__main__':
