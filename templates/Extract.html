@@ -138,12 +138,14 @@
     <div class="card">
         <p>触发词抽取：实例</p>
         <textarea class="text_area" rows="4" style="width: 60%;font-size: 1em"></textarea>
-        <div style="margin: 1em 0"><button class="btn btn-primary" type="button" onclick="ability_extract()">提交</button></div>
+        <div style="margin: 1em 0"><button class="btn btn-primary" type="button" onclick="trigger_extract()">提交</button></div>
+        <!--
         <div style="border-radius: 1em;border: dashed gray 1px;width: 90%;margin: auto">
-            <div class="container" id="container_ability_extract_result"></div>
+            <div class="container" id="container_trigger_extract_result"></div>
         </div>
-        <p>触发词抽取：过程说明</p>
-        <img src="/static/img/ppt/how_to_make_ability.PNG" style="width: 90%"/>
+        -->
+        <textarea class="result_area" rows="20" style="width: 60%;font-size: 1em"></textarea>
+        <p>触发词抽取：BiLSTM-CRF</p>
         <p></p>
 
     </div>
@@ -163,32 +165,52 @@
 
 <div class="footer">
     <hr style="height:1px;border:none;width:30%;border-top:1px solid gray" />
-    <p style="font-weight:bold;font-size:1.2em">Copyright © 2017-2018</p>
-    <p >BDBC Lab of BeiHang University & Zhaopin.com</p>
+    <p style="font-weight:bold;font-size:1.2em">Copyright © 2019-2020</p>
+    <p >BDBC Lab of BeiHang University & EventGraph.com</p>
 </div>
 
     <script>
     var text_area = $(".text_area");
-    text_area.val("1.90后、全日制本科或以上学历；2.具备较强的好奇心及独立思考的能力，对商业有强烈兴趣；3.具有较好的归纳能力与较好的文字和语言表达能力，熟练掌握PPT及Excel；4.接触过至少一种分析软件，如SAS/SPSS等；5.接触过至少一种数据库软件，如：Oracle、MySQL、SQL Server等，会编写简单的SQL查询语句；6.好学善思，积极上进，有责任心及良好的团队合作精神。");
-    ability_extract();
+    text_area.val("7月14日，天津市静海区城关派出所于7月14日从一处水坑打捞出一具男性尸体。");
 
-    function ability_extract(){
+    
+    //trigger_extract();
+
+    function trigger_extract(){
         var content = text_area.val();
         if ($.trim(content) !== ""){
-            $.getJSON("/api/extract/ability/?content="+content, function (result){
+            var get_data = {
+                "content": content,
+            };
+
+           $.getJSON("{% url 'extract_trigger_url' %}", get_data, function(result){     //$.ajax的get请求的一个上层封装
                 console.log(result);
-                repaint(result);
+                /*
+                if(result.status == 0){
+                    alert("查询格式有误");
+                    return;
+                }
+                */
+                show_trigger(result);
+            
             });
         }
     }
 
+    function show_trigger(result){
+        var result_area = $(".result_area");
+        result_area.val('VERB: ' + result['VERB'] + "\n" + 'NOUN: ' + result['NOUN']);
+    }
+
+
+    /*
     var myChart = null;
     function repaint(result){
         //对mychart的初始化
         if (myChart)
             myChart.clear();
         else
-            myChart = echarts.init(document.getElementById('container_ability_extract_result'));
+            myChart = echarts.init(document.getElementById('container_trigger_extract_result'));
         //刷新绘图页面
         var nodeSize = 50;
         var fontSize = 14;
@@ -353,6 +375,8 @@
             ]
         });
     });
+    */
+    
     </script>
 
 

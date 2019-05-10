@@ -138,6 +138,7 @@
     </div>
 
     <!--交互-->
+    <!---
     <div class="row card" style="width: 80%">
         <div class="col-md-4">
             <p >选择您想要查询的内容</p>
@@ -163,6 +164,7 @@
             </p>
         </div>
     </div>
+    -->
 
     <div style="margin-bottom: 50em"></div>
 
@@ -218,6 +220,7 @@
         });
 
         //示范问题
+        /*
         function question_demo(index){
             var result = all_data;
             switch(index) {
@@ -258,6 +261,7 @@
             }
             paint_graph(result);
         }
+        */
 
         var colorPalette = ['#E01F54','#001852','#e05038','#CD8500','#009966',
             '#00868B','#303030','#e6af4b','#89bdd3','#2e4783',
@@ -267,137 +271,7 @@
         var nodeSize = 35;
         var fontSize = 15;
 
-        //绘图
-        /*
-        function paint_graph(result){
-            $('#panel').remove();
-            $('#card0').append("<div id='panel' style='width: 100%;height: 900px'></div>");
-            
-            var myChart = echarts.init(document.getElementById('panel'));
-                myChart.on('click', function (event) {
-                console.log(event);
-                if (event.dataType === 'node'){
-                    entity_info_show(event.data.id);
-                }
-            });
-
-            var nodes = [];
-            var links = [];
-            var categories = [];
-            var category_names = [];
-            result.nodes.forEach(function(node_origin){
-                var node = {'id':node_origin.id, 'name':node_origin.name, 'category':node_origin.category};
-                if (node['category'] === '人物'){
-                    node['category'] = node_origin.sublabel[0];
-                }
-                if ($.inArray(node.category,category_names) < 0){
-                    category_names.push(node.category);
-                    categories.push({
-                        name: node.category
-                    });
-                }
-                node.symbol = 'circle';
-                node.symbolSize = nodeSize;
-                node.x = null;
-                node.y = null;
-                node.itemStyle = null;
-                node.label = {
-                    normal: {
-                       show: true,
-                       position: 'right'
-                   }
-                };
-                nodes.push(node);
-            });
-            result.links.forEach(function(edge_origin){
-                var edge = {'id':edge_origin.id, 'source':edge_origin.source, 'target':edge_origin.target, 'name':edge_origin.name};
-                links.push(edge);
-            });
-            //点亮
-            nodes.forEach(function(node){
-                if ($.inArray(node.id,result['lighting']) >= 0)
-                    node.itemStyle = {
-                        normal: {
-                            borderColor:'yellow',
-                            borderWidth:15
-                        }
-                    };
-            });
-            links.forEach(function(link){
-                if (($.inArray(link.source,result['lighting'])>=0)&&($.inArray(link.target,result['lighting'])>=0))
-                    link.lineStyle = {
-                        normal: {
-                            color: 'yellow',
-                            width: 15
-                        }
-                    };
-            });
-
-            var option = {
-                color:colorPalette,
-                title: {
-                    text: result['title'],
-                    top: '1%',
-                    left: '1%',
-                    textStyle:{
-                        color:"#333333",
-                        fontSize: fontSize*1.2,
-                        fontWeight:'bolder'
-                    },
-                    subtext: '图中共有 '+result.nodes.length+' 个节点以及 '+result.links.length+' 条关系',
-                    subtextStyle:{
-                        color:"#333333",
-                        fontSize: fontSize,
-                        fontWeight:'bold'
-                    }
-                },
-                tooltip: {
-                    formatter: function (params) {
-                        if (params.dataType == 'node')
-                            return params.data.category;
-                        else
-                            return params.data.name;
-                    }
-                },
-                legend:[{
-                    data: categories,
-                    bottom: '1%',
-                    left: '1%',
-                    orient: 'vertical',
-                    selectedMode:false,
-                    textStyle:{
-                        color:'#333333'
-                    }
-                }],
-                series:[{
-                    type: 'graph',
-                    layout: 'force',
-                    data: nodes,
-                    links: links,
-                    categories: categories,
-                    lineStyle: {
-                        normal: {
-                            color: 'source',
-                            width: 2,
-                            curveness: 0.2
-                        }
-                    },
-                    force: {
-                        repulsion: 1000,
-                        layoutAnimation: false
-                    },
-                    roam: true,
-                    focusNodeAdjacency: true,
-                    animationDuration: 2000
-                }],
-                textStyle: {
-                    fontFamily: '微软雅黑',
-                    fontSize: fontSize
-                }
-            };
-            myChart.setOption(option);
-        }
-        */
+      
         //绘图
         function paint_graph(result){
             $('#panel').remove();

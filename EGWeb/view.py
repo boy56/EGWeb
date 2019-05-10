@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from EGWeb.dataservice import search_event_by_theme, search_trigger_by_name, search_trigger_by_theme, find_common
-
+from EGWeb.functions import trigger_extract
 
 def chouqu(request):
     return render(request, 'Extract.html')
@@ -54,4 +54,9 @@ def find_common_pattern(request):
     result['status'] = 1
     return JsonResponse(result)
 
+
+def extract_trigger(request):
+    extract_content = request.GET['content']
+    result = trigger_extract(extract_content)
+    return JsonResponse(result)
 

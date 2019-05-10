@@ -26,6 +26,7 @@ urlpatterns = [
 
     # 以下为api
     path('api/graph/search/', view.search, name='search_url'),
-    path('api/graph/find_common/', view.find_common_pattern, name='find_common_url')
+    path('api/graph/find_common/', view.find_common_pattern, name='find_common_url'),
+    path('api/graph/extract_trigger/', view.extract_trigger, name='extract_trigger_url')
    
 ] 
